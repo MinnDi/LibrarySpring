@@ -1,13 +1,23 @@
 package ru.example.mindi.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.*;
 
+@Entity
+@Table(name = "person")
 public class Person {
+    @Id
+    @Column(name = "id")
     private int id;
+    @Column(name = "name")
     @NotEmpty(message = "Name should not be empty")
     @Size(max = 150, min = 8, message = "Name should be no shorter that 8 characters and no longer thar 150 characters")
     @Pattern(regexp = "[А-Я][а-я]+ [А-Я][а-я]+ [А-Я][а-я]+", message = "Your name should match pattern: Surname Name Middlename")
     private String name;
+    @Column(name = "year")
     @Min(value = 1900, message = "Year should be more than 1900")
     @Max(value = 2200, message = "Year should be less than 2200")
     private int year;

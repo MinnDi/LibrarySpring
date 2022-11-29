@@ -4,16 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import ru.example.mindi.dao.PersonDao;
 import ru.example.mindi.model.Person;
+import ru.example.mindi.service.PersonService;
 
 @Component
 public class PersonValidator implements Validator {
-    private static PersonDao personDao;
+    private final PersonService personService;
 
     @Autowired
-    public PersonValidator(PersonDao personDao) {
-        this.personDao = personDao;
+    public PersonValidator(PersonService personService) {
+        this.personService = personService;
     }
 
     @Override
@@ -24,8 +24,8 @@ public class PersonValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         Person person = (Person) target;
-        if (personDao.getPerson(person.getName()).isPresent() &&
-                personDao.getPerson(person.getName()).get().getId()!=person.getId()){
+        if (personService.getPerson(person.getName()).isPresent() &&
+                personService.getPerson(person.getName()).get().getId()!=person.getId()){
             errors.rejectValue("name", "", "This name already exists");
         }
     }
