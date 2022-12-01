@@ -1,6 +1,8 @@
 package ru.example.mindi.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.mindi.model.Book;
@@ -10,23 +12,36 @@ import ru.example.mindi.repository.PersonRepository;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 public class BookService {
     private final BookRepository bookRepository;
-    private final PersonRepository personRepository;
 
     @Autowired
-    public BookService(BookRepository bookRepository, PersonRepository personRepository) {
+    public BookService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
-        this.personRepository = personRepository;
     }
 
-    public List<Book> getBooks() {
-        return bookRepository.findAll();
+    public List<Book> getBooks(boolean sortByYear) {
+        if (sortByYear) {
+            return bookRepository.findAll(Sort.by("year"));
+        } else {
+            return bookRepository.findAll();
+        }
+    }
+
+    public List<Book> getBooks(Integer page, Integer booksPerPage, boolean sortByYear) {
+        if (sortByYear) {
+            return bookRepository.findAll(PageRequest.of(page, booksPerPage, Sort.by("year"))).getContent();
+        } else {
+            return bookRepository.findAll(PageRequest.of(page, booksPerPage)).getContent();
+        }
+    }
+
+    public List<Book> findByName(String name){
+       return bookRepository.findBooksByNameStartingWith(name);
     }
 
     public Book getBook(int id) {
@@ -37,10 +52,8 @@ public class BookService {
         return bookRepository.findBookByNameAndAuthor(name, author);
     }
 
-    public Optional<Person> getBookOwner(int id) {
-        Integer personId = getBook(id).getPersonId();
-        if (Objects.isNull(personId)) return Optional.empty();
-        else return personRepository.findById(getBook(id).getPersonId());
+    public Person getBookOwner(int id) {
+        return getBook(id).getOwner();
     }
 
     @Transactional
@@ -55,19 +68,22 @@ public class BookService {
     }
 
     @Transactional
-    public void setPerson(int id, int personId) {
-        Book book = getBook(id);
-        book.setPersonId(personId);
-        book.setTakenDate(new Date());
-        bookRepository.save(book);
+    public void setPerson(int id, Person person) {
+        bookRepository.findById(id).ifPresent(
+                book -> {
+                    book.setOwner(person);
+                    book.setTakenDate(new Date());
+                }
+        );
     }
 
     @Transactional
     public void removePerson(int id) {
-        Book book = getBook(id);
-        book.setPersonId(null);
-        book.setTakenDate(null);
-        bookRepository.save(book);
+        bookRepository.findById(id).ifPresent(
+                book -> {
+                    book.setOwner(null);
+                    book.setTakenDate(null);
+                });
     }
 
     @Transactional

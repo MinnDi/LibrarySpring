@@ -28,16 +28,22 @@ public class BookController {
     }
 
     @GetMapping()
-    public String getBooks(Model model){
-        model.addAttribute("books", bookService.getBooks());
+    public String getBooks(Model model, @RequestParam(value = "page", required = false) Integer page,
+                           @RequestParam(value = "books_per_page", required = false) Integer booksPerPage,
+                           @RequestParam(value = "sort_by_year", required = false) boolean sortByYear) {
+        if (page == null || booksPerPage == null || booksPerPage == 0) {
+            model.addAttribute("books", bookService.getBooks(sortByYear));
+        } else {
+            model.addAttribute("books", bookService.getBooks(page, booksPerPage, sortByYear));
+        }
         return "books/books";
     }
 
     @GetMapping("/{id}")
-    public String getBook(Model model, @PathVariable("id") int id, @ModelAttribute("person")Person person){
+    public String getBook(Model model, @PathVariable("id") int id, @ModelAttribute("person") Person person) {
         model.addAttribute("book", bookService.getBook(id));
-        if (bookService.getBookOwner(id).isPresent()){
-            model.addAttribute("owner", bookService.getBookOwner(id).get());
+        if (bookService.getBookOwner(id) != null) {
+            model.addAttribute("owner", bookService.getBookOwner(id));
         } else model.addAttribute("people", personService.getPeople());
         return "books/book";
     }
@@ -49,7 +55,7 @@ public class BookController {
 
     @PostMapping()
     public String create(@ModelAttribute("book") @Valid Book book, BindingResult bindingResult) {
-        bookValidator.validate(book,bindingResult);
+        bookValidator.validate(book, bindingResult);
         if (bindingResult.hasErrors()) return "books/new";
         bookService.save(book);
         return "redirect:/books";
@@ -63,27 +69,40 @@ public class BookController {
 
     @PatchMapping("/{id}")
     public String update(@ModelAttribute("book") @Valid Book book, BindingResult bindingResult, @PathVariable("id") int id) {
-        bookValidator.validate(book,bindingResult);
-        if (bindingResult.hasErrors()) return  "books/edit";
+        bookValidator.validate(book, bindingResult);
+        if (bindingResult.hasErrors()) return "books/edit";
         bookService.update(id, book);
         return "redirect:/books";
     }
 
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable("id") int id){
+    public String delete(@PathVariable("id") int id) {
         bookService.delete(id);
         return "redirect:/books";
     }
 
     @PatchMapping("/{id}/add_person")
-    public String addPerson(@ModelAttribute("person") Person person, @PathVariable("id") int id){
-        bookService.setPerson(id, person.getId());
+    public String addPerson(@ModelAttribute("person") Person person, @PathVariable("id") int id) {
+        bookService.setPerson(id, person);
         return "redirect:/books";
     }
 
     @PatchMapping("/{id}/delete_person")
-    public String deletePerson(@PathVariable("id") int id){
+    public String deletePerson(@PathVariable("id") int id) {
         bookService.removePerson(id);
         return "redirect:/books";
     }
+
+    @GetMapping("/search")
+    public String search() {
+        return "books/search";
+    }
+
+    @PostMapping("/search")
+    public String search(Model model, @RequestParam("name") String name) {
+        model.addAttribute("books", bookService.findByName(name));
+        return "books/search";
+    }
+
+
 }

@@ -1,16 +1,15 @@
 package ru.example.mindi.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.*;
+import java.util.List;
 
 @Entity
 @Table(name = "person")
 public class Person {
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Column(name = "name")
     @NotEmpty(message = "Name should not be empty")
@@ -21,6 +20,8 @@ public class Person {
     @Min(value = 1900, message = "Year should be more than 1900")
     @Max(value = 2200, message = "Year should be less than 2200")
     private int year;
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
 
     public Person(int id, String name, int year) {
         this.id = id;
@@ -54,5 +55,13 @@ public class Person {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
     }
 }

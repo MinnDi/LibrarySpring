@@ -11,6 +11,7 @@ import java.util.Date;
 public class Book {
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Column(name = "name")
     @NotEmpty(message = "Name should not be empty")
@@ -29,9 +30,11 @@ public class Book {
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     private Date takenDate;
-    @Column(name = "person_id")
-    private Integer personId;
-
+    @ManyToOne
+    @JoinColumn(name = "person_id", referencedColumnName = "id")
+    private Person owner;
+    @Transient
+    private Boolean expired;
     public Book(int id, String name, String author, int year) {
         this.id = id;
         this.name = name;
@@ -83,11 +86,19 @@ public class Book {
         this.takenDate = takenDate;
     }
 
-    public Integer getPersonId() {
-        return personId;
+    public Person getOwner() {
+        return owner;
     }
 
-    public void setPersonId(Integer personId) {
-        this.personId = personId;
+    public void setOwner(Person person) {
+        this.owner = person;
+    }
+
+    public Boolean getExpired() {
+        return expired;
+    }
+
+    public void setExpired(Boolean expired) {
+        this.expired = expired;
     }
 }
